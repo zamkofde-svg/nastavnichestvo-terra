@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Карта наставничества · ТЭРА</title>
+<style>
+  :root{
+    --bg:#fbfbfa; --card:#ffffff; --ink:#2b2b2b; --muted:#6b6b6b; --line:#ececec;
+    --accent:#1f6feb; --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 8px rgba(0,0,0,.03);
+    --r-strategy:#2f6fed; --r-values:#8b5cf6; --r-business:#0ea5a4;
+    --r-psy:#e0526b; --r-logic:#d97706; --r-lib:#16a34a; --r-bonus:#9333ea;
+  }
+  html[data-theme="dark"]{
+    --bg:#15171a; --card:#1d2024; --ink:#e7e7e7; --muted:#9aa0a6; --line:#2b2f35;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  header.top{padding:46px 0 18px}
+  h1{font-size:30px;margin:0 0 6px;font-weight:700;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:15px;margin:0}
+  /* mantras ribbon */
+  .ribbon{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:22px}
+  .ribbon-track{display:flex;gap:40px;white-space:nowrap;padding:11px 0;animation:scroll 60s linear infinite;width:max-content}
+  .ribbon:hover .ribbon-track{animation-play-state:paused}
+  .ribbon-track span{color:var(--muted);font-size:13.5px}
+  .ribbon-track b{color:var(--ink);font-weight:600}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  /* controls */
+  .controls{position:sticky;top:0;z-index:20;background:var(--bg);
+    padding:16px 0 12px;border-bottom:1px solid var(--line)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .search{flex:1;min-width:200px;position:relative}
+  .search input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);border-radius:10px;font-size:15px;outline:none}
+  .search input:focus{border-color:var(--accent)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{border:0;background:transparent;color:var(--muted);padding:10px 16px;font-size:14px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#fff}
+  .iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);
+    border-radius:10px;padding:10px 12px;cursor:pointer;font-size:14px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+  .chip{border:1px solid var(--line);background:var(--card);color:var(--muted);
+    padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer;user-select:none}
+  .chip.on{color:#fff;border-color:transparent}
+  /* sections */
+  main{padding:26px 0 80px}
+  .secttitle{display:flex;align-items:center;gap:10px;margin:30px 0 14px;font-size:19px;font-weight:700}
+  .secttitle .count{color:var(--muted);font-size:13px;font-weight:500}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:12px;padding:15px 16px;box-shadow:var(--shadow);cursor:pointer;transition:transform .08s}
+  .card:active{transform:scale(.995)}
+  .card .ctitle{font-weight:650;font-size:15.5px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline}
+  .card .key{color:var(--ink);font-size:14px}
+  .card .meta{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .tag{font-size:11.5px;color:var(--muted);background:transparent;border:1px solid var(--line);
+    border-radius:6px;padding:2px 7px}
+  .tag.les{cursor:default}
+  .badge-bonus{font-size:11px;color:var(--r-bonus);border:1px solid var(--r-bonus);
+    border-radius:6px;padding:2px 7px}
+  .body{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:14px;color:var(--ink)}
+  .card.open .body{display:block}
+  .body p{margin:0 0 9px}
+  .body .lab{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 3px}
+  .body ul{margin:6px 0;padding-left:20px}
+  /* lessons */
+  .lesson{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .lesson h3{margin:0 0 4px;font-size:18px}
+  .lesson .date{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .lesson .lead{font-size:14.5px;margin:0 0 14px}
+  .lesson .mini{display:flex;flex-wrap:wrap;gap:7px}
+  .lesson .mini a{font-size:13px;color:var(--accent);text-decoration:none;border:1px solid var(--line);
+    border-radius:8px;padding:4px 10px;cursor:pointer}
+  .lesson .hw{margin-top:14px;font-size:13.5px;color:var(--muted)}
+  /* homework */
+  .hwlist{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 6px;box-shadow:var(--shadow)}
+  .hwitem{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border-radius:10px;cursor:pointer}
+  .hwitem:hover{background:var(--bg)}
+  .hwitem input{margin-top:3px;width:17px;height:17px;accent-color:var(--accent);cursor:pointer}
+  .hwitem .t{font-size:14.5px}
+  .hwitem .d{font-size:12.5px;color:var(--muted)}
+  .hwitem.done .t{text-decoration:line-through;color:var(--muted)}
+  .progress{height:6px;background:var(--line);border-radius:999px;margin:4px 14px 14px;overflow:hidden}
+  .progress > i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+  /* library */
+  .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .libitem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+  .libitem .a{font-weight:650;font-size:14.5px}
+  .libitem .who{color:var(--muted);font-size:13px;margin-top:2px}
+  .libitem .note{font-size:12.5px;color:var(--muted);margin-top:7px}
+  .empty{color:var(--muted);text-align:center;padding:40px;font-size:15px}
+  footer{border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:13px;text-align:center}
+  .hide{display:none!important}
+  @media(max-width:560px){h1{font-size:24px}.controls{padding-top:12px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Карта наставничества</h1>
+    <p class="sub">Сводная по занятиям ТЭРА · наставник Дмитрий Александрович · конспекты, фреймворки, домашки</p>
+  </div>
+  <div class="ribbon"><div class="ribbon-track" id="ribbon"></div></div>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="row">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="Поиск: доминанта, Уэлч, энергия, нехватка…" autocomplete="off">
+      </div>
+      <div class="seg" id="viewseg">
+        <button data-v="topics" class="on">По темам</button>
+        <button data-v="lessons">По занятиям</button>
+      </div>
+      <button class="iconbtn" id="rnd" title="Случайная идея">🎲</button>
+      <button class="iconbtn" id="theme" title="Тема">🌙</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+
+<main class="wrap" id="main"></main>
+
+<footer class="wrap">
+  Собрано из транскриптов занятий 2–7 и базы знаний прошлого потока. Блок 🎁 — материалы прошлого потока.
+</footer>
+
+<script>
+/* ---------- ДАННЫЕ ---------- */
+const RUBRICS={
+  strategy:{name:"Стратегия и лидерство",icon:"🧭",c:"var(--r-strategy)"},
+  values:{name:"Ценности и философия",icon:"💎",c:"var(--r-values)"},
+  business:{name:"Бизнес-модели",icon:"📊",c:"var(--r-business)"},
+  psy:{name:"Психология и продуктивность",icon:"🧠",c:"var(--r-psy)"},
+  logic:{name:"Логика и мышление",icon:"🎯",c:"var(--r-logic)"},
+  bonus:{name:"🎁 Из прошлого потока",icon:"🎁",c:"var(--r-bonus)"},
+};
+const LESSONS={
+  2:{title:"Бизнес, ценности, стратегии выживания",date:"Занятие 2",
+     lead:"Предпринимательство vs бизнес, движение денег, метафора «газонокосилки», НДС и стратегия надежды, ценности, объём/сегменты. Часть 2: островки света, народосбережение, жизненный цикл, эффект Зейгарник, умственная жвачка.",
+     hw:"Письмо №2 · наблюдать эффект Зейгарник · ежедневник «6 минут» · вернуть себе «могу»."},
+  3:{title:"Господствующая высота, матрицы, нейробиология",date:"Занятие 3",
+     lead:"Самодиагностика (самозанятый→бизнес→инвестор), БКГ, матрица Уэлча, организация пространства/роли, точки контроля (Голдсмит). Часть 2: нейроны, цифровая зависимость, инстинкты, иерархия, восхищать/восхищаться.",
+     hw:"Письмо №2 · ролик Курпатова в Давосе + конспект · посмотреть на себя через призму инстинктов."},
+  4:{title:"Ролик Курпатова, дефолт-система, «Троица»",date:"Занятие 4",
+     lead:"Режимы работы мозга, экранное время, интеллектуальное меньшинство, дефолт-система (23 мин, сон, прогулки), коммуникация в одной системе ценностей, круги Данбара, проекция-интроекция, типы «Троицы».",
+     hw:"Письмо №2 · тест «Троица» · лекция «Как быть крутым / интеллектуальное меньшинство» + конспект."},
+  5:{title:"Цели и эмоции, Павлов/Ухтомский/Выготский",date:"Занятие 5",
+     lead:"Разбор теста «Троица», интеллектуальное смирение, лекция Лены (точка ноль, естественные задачи vs цели, эмоции), три теории (динамический стереотип, доминанта, знак-значение), структура менеджмента, цикл Деминга.",
+     hw:"Письмо №2 · лекция «Поиск предназначения / лень» + конспект."},
+  6:{title:"Релакс-процедуры + «Как закалялась сталь»",date:"Занятие 6",
+     lead:"Релаксирующие процедуры (классификация), важность режима. Большой блок — предпринимательский путь: 90-е, рекламное агентство, Акватель, покупка Кристалла, Веста, государство и стратегия надежды.",
+     hw:"Список релакс-процедур + классификация · что даёт / забирает энергию."},
+  7:{title:"Энергия, лень/предназначение, разборы",date:"Занятие 7",
+     lead:"Разбор «что даёт/забирает энергию» и релакс-процедур, депутатство и господдержка, разбор лекции про лень и предназначение, форматы разборов (супервизия/интервизия), живые разборы участников (Алексей — дисциплина в нейросетях, Юля — поиск своей сферы).",
+     hw:"Лекция Курпатова про счастье (Вселенная 25) · домашки из личных разборов."},
+};
+const CARDS=[
+  // STRATEGY
+  {r:"strategy",t:"Предпринимательство vs Бизнес",les:[2],key:"Бизнес работает без личности и регулярно даёт свободный денежный поток.",
+   d:"<p>Три фактора отличия:</p><ul><li><b>Личность</b> — пока всё держится на основателе, это самозанятость/предпринимательство.</li><li><b>Товар</b> — бизнес можно продать: процессы описаны, работает без тебя.</li><li><b>Свободный денежный поток</b> — генерит деньги сверх «прокормить себя + поддержать бизнес» (≈ EBITDA).</li></ul>"},
+  {r:"strategy",t:"Учфонд: движение денег",les:[2],key:"Все деньги стекаются в учредительный фонд, оттуда — реинвестиции, дивиденды, инвестиции.",
+   d:"<p>ЦФО → учредительный фонд → <b>реинвестиции</b> (в тот же бизнес) → <b>дивиденды</b> (собственнику) → <b>инвестиции</b> (свободный поток — куда угодно).</p><p class='lab'>Личные деньги на 3 части</p><p>ХБ («хлебобулочные» — быт) · краткосрочные инвестиции · долгосрочные инвестиции.</p>"},
+  {r:"strategy",t:"Метафора «газонокосилки»",les:[2],key:"Вырос выше травы — приедет косилка. Две стратегии: вверх (с защитой) или в траве (несколько мелких).",
+   d:"<p>Бизнес растёт в траве; вырос выше — «ты чьих будешь?» (90-е — рэкет, сейчас — государство/НДС). Стратегии: (1) расти высоко — нужны связи/защита; (2) расти в траве — несколько небольших, «дома не выше сосен».</p>"},
+  {r:"strategy",t:"Стратегия надежды",les:[2,6],key:"Все кризисы цикличны. Выживать «за счёт жирка», не уходить в тень.",
+   d:"<p>НДС «сменил насадку газонокосилки». Не уходить в тень (уголовка на управляющего и главбуха — не подставит людей). Горизонт «пережить чистку» — 3 года. «Дифференцируйся или умирай». «Как было — не будет».</p>"},
+  {r:"strategy",t:"Объём и сегменты",les:[2],key:"Меньше объём в премиуме = выше доходность. Растёт база — поднимай цену.",
+   d:"<p>Сегменты: премиум / средний / масс. Золотая середина — 30–35 тыс. бутылок/мес. Выше = «режим подвига», ниже 25 тыс. = не зарабатываем. При росте базы поднимаю цену и набираю новую.</p>"},
+  {r:"strategy",t:"Не мешать хорошим людям работать",les:[2],key:"Главная задача руководителя (Пётр Капица) — тогда это бизнес, а не самозанятость.",
+   d:"<p>Хороших людей нашёл и собрал — задача не мешать. С 2014 «уволил себя», управляет одна управляющая, он — стратегия + ежемесячная отчётность.</p>"},
+  {r:"strategy",t:"Господствующая высота",les:[3],key:"Где ты на лестнице: самозанятый → предприниматель → бизнес → инвестор. И куда хочешь.",
+   d:"<p>Внизу — те, о ком заботимся; выше — кто заботится о нас. Роль может быть временной («либо в бизнес, либо сдохнуть»). Можно быть в разных проектах в разных ролях одновременно (шляпы).</p>"},
+  {r:"strategy",t:"Пространство = роли",les:[3],key:"Физически меняй место под роль — мозг переключается.",
+   d:"<p>Зоны кабинета: общественная / за столом бизнес / переговоры / Google-зона (диван, ковёр, босиком — «штаб»). «Надел шляпу» роли.</p>"},
+  {r:"strategy",t:"Точки контроля и обстоятельства",les:[3,7],key:"Создай себе внешние обстоятельства — мозг сам не сядет работать.",
+   d:"<p>Маршалл Голдсмит нанял девушку с чек-листом для ежевечернего опроса. Обстоятельства: регулярные планёрки, обещание авторитетным людям (стыдно не сделать), бади, дедлайн, деньги сдать. «Управление — искусство достигать цели чужими руками».</p>"},
+  {r:"strategy",t:"Образ будущего вместо детальных планов",les:[2],key:"Детали не угадаешь — планируй через концепцию и горизонт.",
+   d:"<p>Стратегия-2020 ХМАО (Boston Consulting) «не отгадала ничего». Решения принимать через образ будущего на 15 лет, а не цифры. Премьер Сингапура: «мы не просто верим в чудо — мы его планируем».</p>"},
+
+  // VALUES
+  {r:"values",t:"4+1 типа ценностей",les:[2],key:"Определяющие — нравственные.",
+   d:"<p>Нравственные · психологические · интеллектуальные · физические · комплексные. Решил сохранить бизнес из нравственных (обязательства перед людьми). «Звали строить пивзавод — по ценностям пиво не отозвалось, а вода пошла».</p>"},
+  {r:"values",t:"Не делай за деньги то, что стыдно",les:[2],key:"Деньги кончатся — позор останется.",
+   d:"<p>Опора репутации: «ты мне никогда не подводил» — так после кризиса 1998 за 2 года всё восстановил на старых клиентах.</p>"},
+  {r:"values",t:"Островки света",les:[2],key:"Каждый своей жизнью создаёт островок света; островки сливаются.",
+   d:"<p>Концепция Святослава Дондурея. Группа наставничества — островок света. Рядом — «народосбережение» (Стариков) как национальная идея и закон критической массы (30% → остальные подстроятся).</p>"},
+  {r:"values",t:"Ценность и чувство меры",les:[2],key:"«Мир вращается вокруг ценностей и чувства меры» (Дегтярёв).",
+   d:"<p>Ценность — что ты даёшь миру; чувство меры — баланс между крайностями. Без ценности нет обмена, без меры нет устойчивости.</p>"},
+  {r:"values",t:"Зарабатывать сколько хватает",les:[7],key:"Богат не тот, у кого много, а кому хватает.",
+   d:"<p>Суициды при потере денег не зависят от суммы — от чувства/стыда. Ясность в финансах облегчает коммуникацию. Вера в людей несмотря на «жаб» (примеры щедрости).</p>"},
+  {r:"values",t:"Свобода",les:[7],key:"Свобода — не делать того, чего не хочешь (а «делаю что хочу» = беспредел).",
+   d:"<p>5С (Ситников/Соболев): сон, солнце, смех, секс, спорт — наставник добавил свободу. Природа/деревья — ресурс.</p>"},
+
+  // BUSINESS
+  {r:"business",t:"Матрица БКГ",les:[2,3],key:"Звёзды · дойные коровы · знаки вопроса · собаки.",
+   d:"<p>Рост рынка × доля рынка. Дойные коровы кормят звёзды. Пример воды: Кристалл-Йод/Фтор запускал как звёзды — «зависли», потом объединил.</p>"},
+  {r:"business",t:"Матрица Джека Уэлча",les:[3],key:"Эффективность × лояльность → увольнять / обучать / наёмники / золотой фонд.",
+   d:"<ul><li>неэффективные+нелояльные → увольнять</li><li>лояльные+неэффективные → обучать</li><li>эффективные+нелояльные → <b>наёмники</b> (всегда готов расстаться)</li><li>эффективные+лояльные → <b>золотой фонд</b> (лелеять, растить)</li></ul>"},
+  {r:"business",t:"Жизненный цикл (Адизес)",les:[2],key:"Ухаживание → расцвет → смерть. В расцвете запускай новое.",
+   d:"<p>У организаций/продуктов есть цикл. Важно наложить цикл бизнеса на свой личный цикл.</p>"},
+  {r:"business",t:"Функции менеджмента",les:[5],key:"Планирование, организация, мотивация, контроль. Планирование — 80%.",
+   d:"<p>МЭСКОН. Хорошо спланировал — остальное даётся легко (Сергей Витальевич Медведев, ГК «Статус»).</p>"},
+  {r:"business",t:"Структура менеджерского мастерства",les:[5],key:"Предметная область · функции менеджмента · коммуникация (80% работы руководителя).",
+   d:"<p>Дегтярёв: «двигатель ↔ масло». Залог успешной коммуникации — работа в одной системе ценностей. «Рот закрыл — рабочее место прибрано».</p>"},
+  {r:"business",t:"Цикл Деминга (PDCA)",les:[5],key:"Планируй → Делай → Проверяй → Улучшай, по кругу.",
+   d:"<p>3 принципа ГК «Статус»: ориентация на потребителя, постоянное совершенствование, вовлечение персонала (система 5S — «инструмент на месте»).</p>"},
+  {r:"business",t:"Уроки бизнес-пути",les:[6],key:"Оформляйте доли. «За деньги дешевле». Самый страшный зверь — жаба.",
+   d:"<p>Рекламное агентство (доли на словах → потерял всё в 1998), Акватель (отстройка: доставка + натуральная вода), покупка Кристалла (главный аргумент — безопасность: не дать продать эффективному конкуренту; сюрпризы — долг, вывезенное производство, владелец имел лишь 63%). Веста — «по-разному люди видят справедливость».</p>"},
+  {r:"business",t:"10 000 часов и делегирование",les:[7],key:"Сначала практика, потом теория. Достаточно поверхностного понимания, чтобы ставить задачу.",
+   d:"<p>В нейросетях знания устаревают за 2 недели → делать, потом смотреть «как лучше». Делегировать (Кирилл/Илья). Считать часы как цель и решить, от чего отказываешься, чтобы освободить время.</p>"},
+
+  // PSYCHOLOGY
+  {r:"psy",t:"Мозг: 2% массы, 20% энергии",les:[2,3],key:"Самый ленивый орган. Закон сохранения энергии — мозг экономит.",
+   d:"<p>«Змей-искуситель» всё время тянет отдохнуть. Чтобы действовать — создать обстоятельства.</p>"},
+  {r:"psy",t:"Нейропластичность и окна возможностей",les:[3],key:"Неиспользуемые нейроны отмирают; мозг — мышца.",
+   d:"<p>Рождаемся с ~150 млрд нейронов. Дедлайн <b>21–25 лет</b> — миелинизация лобных долей, дальше обучаемость падает. Что наработал — с тем живёшь.</p>"},
+  {r:"psy",t:"Цифровая зависимость = делегирование мышления",les:[3,4],key:"Не пользуешься навыком (навигация) — мозг его сворачивает.",
+   d:"<p>«Хорошо иметь гаджет, плохо — когда гаджет имеет тебя». Иллюзия доступа: решения принимаем только из информации «на своём сервере». Цифровая гигиена, ч-б экран, телефон за дверью.</p>"},
+  {r:"psy",t:"Инстинкт самосохранения",les:[3],key:"Один инстинкт, три ипостаси: индивидуальный, иерархический, половой.",
+   d:"<p><b>Индивидуальный</b> — выжить; жадны до калорий и информации; между любопытством и безопасностью. <b>Иерархический</b> — власть и защищённость (признание/уважение). <b>Половой</b> — сейчас «восхищать и восхищаться» (ценно только от тех, кем восхищаемся сами).</p>"},
+  {r:"psy",t:"Режимы работы мозга",les:[4],key:"ЦИС (потребление) · Сеть значимости (приоритеты) · Дефолт-система (мышление). Антагонисты.",
+   d:"<p>Работает только один режим. Дефолт-система включается на полную через <b>23 минуты</b> без отвлечений; естественно — во сне и на прогулке (ходим = сигнал безопасности). Инсайты на прогулке/во сне.</p>"},
+  {r:"psy",t:"Круги Данбара",les:[4],key:"5 / 15 / 50 / 150 — предел удерживаемых связей; за ним 500 и 1500.",
+   d:"<p>Слои по часам общения. Эффективная команда ≤150, малые группы ~15. Круги меняются со временем; ими можно осознанно управлять («человеческий детокс»).</p>"},
+  {r:"psy",t:"Троица: способы сборки реальности",les:[4,5],key:"Конструктор (системы) · Рефлектор (люди/чувства) · Центрист (смыслы).",
+   d:"<p>Зависит от баланса импульсов кора↔подкорка. Тип генетически обусловлен; навыки можно развивать. Применение — коммуникация в одной системе ценностей + закрывать проседающий радикал людьми. История с кактусом (подарил жене кактус, которого нет → восторг).</p>"},
+  {r:"psy",t:"Эффект Зейгарник",les:[2],key:"Незавершённое крутится в голове. Закрывай вопросы, ложись с «пустым телефоном».",
+   d:"<p>Курт Левин / Блюма Зейгарник (официанты помнят неоплаченные счета). Нерешённое переписать в ежедневник.</p>"},
+  {r:"psy",t:"Умственная жвачка",les:[2],key:"Выписать все мысли → разложить: Додумать / Доделать / Выкинуть.",
+   d:"<p>Лист, 15–30 мин. Выкидывать то, на что не влияешь (адаптироваться и принять). Записывание = уже действие (обманываем мозг).</p>"},
+  {r:"psy",t:"Принцип доминанты (Ухтомский)",les:[5],key:"Сильная доминанта забирает энергию у остальных. Работа с привычкой — через доминанты.",
+   d:"<ul><li>Отследить <b>в моменте</b> (триггер/обстоятельства)</li><li>Информационно <b>ослабить нежелательную</b> и <b>усилить желательную</b></li><li>Подкрепление («плюшка»)</li></ul><p>Констатация → озадаченность → действие. Мозг можно только вынудить пересобрать реальность.</p>"},
+  {r:"psy",t:"Динамический стереотип (Павлов)",les:[5],key:"Жизнь = набор привычных паттернов. Что можно алгоритмизировать — нужно.",
+   d:"<p>Ревизия: как мои действия связаны с целями? Вопрос «эффективны ли мои стереотипы?» — начало изменений.</p>"},
+  {r:"psy",t:"Знак-значение (Выготский)",les:[5],key:"Мы — перекрестье социальных отношений. «Тяжесть» значения у всех разная.",
+   d:"<p>«Мысль начинается там, где натыкается на препятствие» (другие люди). Чем больше и сложнее связи — тем больше развивается мозг.</p>"},
+  {r:"psy",t:"4 базовые эмоции",les:[5],key:"Страх, гнев, печаль, радость — нет «плохих», все нужны.",
+   d:"<p><b>Страх</b> — уйти от опасности (парализующий — нездорово). <b>Гнев</b> — убрать дискомфорт, движение вперёд. <b>Печаль</b> — замедлиться, попрощаться (непрожитая → депрессия). Реакции: бей/беги/замри (ок) vs <b>капитуляция</b> (выученная беспомощность — крысы Селигмана).</p>"},
+  {r:"psy",t:"Точка ноль: задачи vs цели",les:[5],key:"Фундамент = отношения + дело + финансовая стабильность. Из минуса в плюс — разные действия.",
+   d:"<p>Лекция Лены. Сначала честно определить, где ты. <b>Естественные задачи</b> (квартира, отпуск, заработок) ≠ цели жизни. Цели ставить <b>через чувство</b>, а не формальные критерии/статус. «Знакомьтесь с собой».</p>"},
+  {r:"psy",t:"Нехватка нехватки",les:[7],key:"Удовольствие даёт восполнение нехватки. В профиците — лень.",
+   d:"<p>Между желанием и удовлетворением нет паузы → нет предвкушения. Дофамин — гормон предвкушения (казино/лента). Помогает <b>создание специальной нехватки</b>: голодание, холод, тишина-ретрит, изоляция.</p>"},
+  {r:"psy",t:"Релакс-процедуры",les:[6,7],key:"Восстановление — часть продуктивности. Алгоритмизируй отдых.",
+   d:"<p>Ресурсы <b>1-го порядка</b> (не затрачиваешь: сон, секс) и <b>2-го</b> (сначала вкладываешь: встречи, спорт). Дегтярёв: 1-й должен предшествовать 2-му (не выспался — не на тренировку). Классифицировать по времени/виду. «Что даёт / что забирает энергию».</p>"},
+  {r:"psy",t:"Учимся у авторитетов",les:[3],key:"Не воспринимаешь кого-то авторитетом — ничему не научишься.",
+   d:"<p>Эксперимент с обезьянами: научили высокоранговую — научилось всё племя. Поэтому важна ученическая позиция.</p>"},
+
+  // LOGIC
+  {r:"logic",t:"2 уровня логической культуры",les:[5],key:"Сначала сформулировать тезис, потом привести аргументы.",
+   d:"<p>Уровень 1 — чётко выразить мысль, отделить факт от мнения. Уровень 2 — релевантные аргументы и цепочка рассуждений. Без 1-го невозможен 2-й.</p>"},
+  {r:"logic",t:"Принцип изучения материала",les:[4],key:"Запрос → концептуализация (схемы своими руками) → коммуникация.",
+   d:"<p>Цепочка: Информация → Знания → Практика → Навык → Решение задач. 3 этапа усвоения: услышал → подумал → <b>применил/транслировал</b> (готовясь к выступлению — «бетонирование»).</p>"},
+  {r:"logic",t:"Ученическая позиция / смирение",les:[4,5],key:"Успех играет злую шутку: снобизм мешает учиться.",
+   d:"<p>Гуманная педагогика Амонашвили. Интеллектуальное смирение: «я знаю, что ничего не знаю». Выбирать сложность (требует усилий).</p>"},
+  {r:"logic",t:"Круги Эйлера / эффект бабочки",les:[5],key:"Малое действие → большие последствия. «Жизнь — цепь, и мелочи в ней звенья».",
+   d:"<p>Визуализация пересечений понятий. Икигай — пересечение кругов.</p>"},
+
+  // BONUS (прошлый поток)
+  {r:"bonus",t:"Эксперимент Милгрэма",bonus:1,key:"Рядом с авторитетом человек снимает с себя ответственность.",
+   d:"<p>1963. 65% дошли до максимальной «дозы тока» по команде. Осознавай, когда подчиняешься авторитету, а не своему решению.</p>"},
+  {r:"bonus",t:"«Добрый самаритянин» (Дарли–Батсон)",bonus:1,key:"Спешка убивает эмпатию. Ситуация сильнее характера.",
+   d:"<p>1973. Семинаристы, спешившие на лекцию о милосердии, проходили мимо нуждающегося. Главный фактор помощи — наличие времени, не убеждения.</p>"},
+  {r:"bonus",t:"Стэнфордский тюремный эксперимент",bonus:1,key:"Роль формирует поведение. Власть без контроля развращает.",
+   d:"<p>Зимбардо, 1971. За 6 дней «охранники» стали жестокими. Мы — не только характер, но и контекст. (У нас звучал как «импровизированная тюрьма».)</p>"},
+  {r:"bonus",t:"Гедонистическая адаптация",bonus:1,key:"Психика привыкает к любому уровню удовольствий. Удовольствие живёт в контрастах.",
+   d:"<p>Что помогает: смаковать, благодарность, перерывы в потреблении (нехватка), неприятное — куском, приятное — растягивать, разнообразие.</p>"},
+  {r:"bonus",t:"Когнитивные искажения и счастье",bonus:1,key:"Мыслим через сравнение. Благодарность отключает зависть.",
+   d:"<p>Стоп-наблюдение (громко «стоп»), рефлексия как фильтр. Счастье дают: доброта, социальные связи, спорт/сон.</p>"},
+  {r:"bonus",t:"«Конверт смерти»",bonus:1,key:"Цифровое завещание: передай активы и пароли близким заранее.",
+   d:"<p>Trust Wallet (криптоактивы при длительной неактивности), 1Password (пароли). Подготовь заранее.</p>"},
+  {r:"bonus",t:"Мета-позиция",bonus:1,key:"Наблюдать за собой со стороны — это меняет решения.",
+   d:"<p>Выход из ситуации в позицию наблюдателя; снижает эмоциональное вовлечение, видны паттерны.</p>"},
+  {r:"bonus",t:"Дуракоустойчивость",bonus:1,key:"Если пятилетний поймёт — объяснил хорошо. Не можешь объяснить просто — сам не понял.",
+   d:"<p>Простота ≠ примитивность. Метод Фейнмана.</p>"},
+  {r:"bonus",t:"4 возраста человека",bonus:1,key:"«Мама знает всё → похоже, не всё → что мать знает → надо было слушать маму».",
+   d:"<p>Понимать, на какой стадии ребёнок — тогда понятно, что и когда можно донести.</p>"},
+  {r:"bonus",t:"Метод доведения до абсурда",bonus:1,key:"Для тех, кто драматизирует — усугубить, человек сам увидит абсурд.",
+   d:"<p>Помогает выйти из позиции жертвы через осознание преувеличения.</p>"},
+  {r:"bonus",t:"Страх и интерес",bonus:1,key:"Два базовых мотиватора: избегание vs приближение. Интерес устойчивее.",
+   d:"<p>Оба работают, но интерес даёт устойчивую мотивацию.</p>"},
+  {r:"bonus",t:"«Каждое 4-е поколение в рубашке»",bonus:1,key:"Создаёт → приумножает → растрачивает → с нуля.",
+   d:"<p>Передача капитала без передачи ценностей и навыков обречена.</p>"},
+];
+const LIBRARY=[
+  {a:"Красная таблетка 1–2, Троица, Счастливый ребёнок, Как устроен мозг",who:"Андрей Курпатов",note:"Нейрофизиология — основа большинства лекций."},
+  {a:"Тренинги по ценностям и убеждению",who:"Михаил Григорьевич Дегтярёв",note:"Учитель наставника («Горыныч»)."},
+  {a:"Идеальный руководитель и др.",who:"Ицхак Адизес",note:"Жизненный цикл организаций."},
+  {a:"Делай просто, просто делай",who:"Оскар Хартман",note:"Действовать, а не планировать бесконечно."},
+  {a:"Триггеры · Прыгни выше головы",who:"Маршалл Голдсмит",note:"Привычки и внешний контроль."},
+  {a:"Хочу-могу-надо",who:"Марина Мелия",note:"Жизненные стратегии."},
+  {a:"Кармический менеджмент · Алмазный огранщик",who:"—",note:"Заряженность действий, помощь другим."},
+  {a:"От хорошего к великому",who:"Джим Коллинз 🎁",note:"Level 5, концепция ежа, «сначала кто, потом что»."},
+  {a:"Отец",who:"Игорь Рыбаков 🎁",note:"Отцовство, передача ценностей."},
+  {a:"Фильмы: Идиократия · Инстинкт 🎁 · Апокалипсис 🎁",who:"—",note:"Природа человека, инстинкты, цивилизация."},
+];
+const HOMEWORK=[
+  {t:"Ежедневник «6 минут»",d:"Рефлексия дня + благодарности (ежедневно)."},
+  {t:"Письма по алгоритму №2",d:"Пишем после встреч, наставник читает."},
+  {t:"Ролик Курпатова в Давосе + конспект",d:"Режимы мозга, цифровой аутизм."},
+  {t:"Лекция «Интеллектуальное меньшинство» + конспект",d:"Смирение, выбирать сложность."},
+  {t:"Лекция «Поиск предназначения / лень»",d:"Нехватка, доминанта, поток."},
+  {t:"Лекция про счастье (Вселенная 25)",d:"Завершающая, гедонистическая адаптация."},
+  {t:"Тест «Троица»",d:"e-magic.ru / лаборатория нейронаук Сбера (по SberID — бесплатно)."},
+  {t:"Умственная жвачка",d:"Выписать мысли → Додумать / Доделать / Выкинуть."},
+  {t:"Релаксирующие процедуры",d:"Список + классификация."},
+  {t:"Что даёт / что забирает энергию",d:"Два столбика, отслеживать в моменте."},
+  {t:"Горы и овраги",d:"Упражнение из книги «Выбор профессии»."},
+  {t:"Самодиагностика по господствующей высоте",d:"Где ты и куда хочешь."},
+  {t:"Через призму инстинктов",d:"Какую нехватку восполняю через ТЭРу/дело."},
+];
+const MANTRAS=[
+  "«Хорошо иметь Х, плохо — когда Х имеет тебя»",
+  "«Мир вращается вокруг ценностей и чувства меры»",
+  "«Не мешать хорошим людям работать» — Капица",
+  "«Не делайте за деньги то, что стыдно. Деньги кончатся — позор останется»",
+  "«Так будет не всегда» — Садальский",
+  "«За деньги дешевле»",
+  "«Самый страшный зверь — жаба»",
+  "«Богат не тот, у кого много, а кому хватает»",
+  "«Управление — искусство достигать цели чужими руками»",
+  "«Счастье — это путь, а не цель»",
+  "«Дифференцируйся или умирай»",
+];
+
+/* ---------- РЕНДЕР ---------- */
+const $=s=>document.querySelector(s), main=$("#main");
+let view="topics", activeRubric="all", query="";
+
+// ribbon
+$("#ribbon").innerHTML=[...MANTRAS,...MANTRAS].map(m=>`<span>${m}</span>`).join("");
+
+// chips
+const chipsEl=$("#chips");
+function buildChips(){
+  let html=`<div class="chip ${activeRubric==='all'?'on':''}" data-r="all" style="${activeRubric==='all'?'background:var(--ink);':''}">Все</div>`;
+  for(const k in RUBRICS){
+    const on=activeRubric===k;
+    html+=`<div class="chip ${on?'on':''}" data-r="${k}" style="${on?'background:'+RUBRICS[k].c:''}">${RUBRICS[k].icon} ${RUBRICS[k].name}</div>`;
+  }
+  chipsEl.innerHTML=html;
+}
+chipsEl.addEventListener("click",e=>{
+  const c=e.target.closest(".chip"); if(!c)return;
+  activeRubric=c.dataset.r; buildChips(); render();
+});
+
+function matches(card){
+  if(activeRubric!=="all" && card.r!==activeRubric) return false;
+  if(!query) return true;
+  const hay=(card.t+" "+card.key+" "+(card.d||"")+" "+RUBRICS[card.r].name).toLowerCase();
+  return hay.includes(query);
+}
+function cardHTML(card,i){
+  const col=RUBRICS[card.r].c;
+  const les=(card.les||[]).map(n=>`<span class="tag les">Занятие ${n}</span>`).join("");
+  const bonus=card.bonus?`<span class="badge-bonus">🎁 прошлый поток</span>`:"";
+  return `<div class="card" style="border-left-color:${col}" data-i="${i}">
+    <div class="ctitle">${card.t}</div>
+    <div class="key">${card.key}</div>
+    <div class="meta">${les}${bonus}</div>
+    ${card.d?`<div class="body">${card.d}</div>`:""}
+  </div>`;
+}
+function renderTopics(){
+  let html="";
+  const order=["strategy","values","business","psy","logic","bonus"];
+  let total=0;
+  for(const k of order){
+    const list=CARDS.map((c,i)=>({c,i})).filter(x=>x.c.r===k && matches(x.c));
+    if(activeRubric!=="all" && activeRubric!==k) continue;
+    if(!list.length) continue;
+    total+=list.length;
+    html+=`<div class="secttitle">${RUBRICS[k].icon} ${RUBRICS[k].name}<span class="count">${list.length}</span></div>`;
+    html+=`<div class="grid">${list.map(x=>cardHTML(x.c,x.i)).join("")}</div>`;
+  }
+  // homework + library only when no search & all rubrics
+  if(!query && activeRubric==="all"){
+    html+=`<div class="secttitle">✅ Домашние задания<span class="count" id="hwc"></span></div>`;
+    html+=`<div class="hwlist"><div class="progress"><i id="hwbar"></i></div>${HOMEWORK.map((h,i)=>{
+      return `<label class="hwitem" data-h="${i}"><input type="checkbox" data-h="${i}"><span><span class="t">${h.t}</span><br><span class="d">${h.d}</span></span></label>`;
+    }).join("")}</div>`;
+    html+=`<div class="secttitle">📚 Библиотека<span class="count">${LIBRARY.length}</span></div>`;
+    html+=`<div class="lib">${LIBRARY.map(l=>`<div class="libitem"><div class="a">${l.a}</div><div class="who">${l.who}</div><div class="note">${l.note}</div></div>`).join("")}</div>`;
+  }
+  main.innerHTML=html || `<div class="empty">Ничего не найдено по запросу «${query}».</div>`;
+  if(!query && activeRubric==="all") wireHomework();
+}
+function renderLessons(){
+  let html="";
+  for(const n of Object.keys(LESSONS)){
+    const L=LESSONS[n];
+    const rel=CARDS.map((c,i)=>({c,i})).filter(x=>(x.c.les||[]).includes(+n) && matches(x.c));
+    if(query && !rel.length && !(L.title+L.lead).toLowerCase().includes(query)) continue;
+    html+=`<div class="lesson">
+      <div class="date">${L.date}</div>
+      <h3>${L.title}</h3>
+      <p class="lead">${L.lead}</p>
+      <div class="mini">${rel.map(x=>`<a data-i="${x.i}">${x.c.t}</a>`).join("")}</div>
+      <div class="hw">📌 Домашка: ${L.hw}</div>
+    </div>`;
+  }
+  main.innerHTML=html || `<div class="empty">Ничего не найдено.</div>`;
+}
+function render(){ view==="topics"?renderTopics():renderLessons(); }
+
+// card expand + jump from lesson
+main.addEventListener("click",e=>{
+  const jump=e.target.closest(".mini a");
+  if(jump){ // switch to topics, open that card
+    const i=+jump.dataset.i; view="topics"; activeRubric="all"; query=""; $("#q").value="";
+    $$seg("topics"); buildChips(); render();
+    setTimeout(()=>{const el=document.querySelector(`.card[data-i="${i}"]`); if(el){el.classList.add("open");el.scrollIntoView({behavior:"smooth",block:"center"});}},40);
+    return;
+  }
+  const card=e.target.closest(".card");
+  if(card && !e.target.closest(".hwitem")) card.classList.toggle("open");
+});
+
+// homework persistence
+function wireHomework(){
+  const saved=JSON.parse(localStorage.getItem("hw")||"{}");
+  document.querySelectorAll('.hwitem').forEach(it=>{
+    const i=it.dataset.h, cb=it.querySelector("input");
+    cb.checked=!!saved[i]; it.classList.toggle("done",cb.checked);
+    cb.addEventListener("change",()=>{
+      saved[i]=cb.checked; localStorage.setItem("hw",JSON.stringify(saved));
+      it.classList.toggle("done",cb.checked); updateBar(saved);
+    });
+  });
+  updateBar(saved);
+}
+function updateBar(saved){
+  const done=HOMEWORK.filter((_,i)=>saved[i]).length;
+  const bar=$("#hwbar"), c=$("#hwc");
+  if(bar) bar.style.width=(done/HOMEWORK.length*100)+"%";
+  if(c) c.textContent=done+" / "+HOMEWORK.length;
+}
+
+// view toggle
+function $$seg(v){document.querySelectorAll("#viewseg button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));}
+$("#viewseg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  view=b.dataset.v; $$seg(view); render();
+});
+
+// search
+$("#q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
+
+// random
+$("#rnd").addEventListener("click",()=>{
+  view="topics"; activeRubric="all"; query=""; $("#q").value=""; $$seg("topics"); buildChips(); render();
+  const i=Math.floor(Math.random()*CARDS.length);
+  setTimeout(()=>{const el=document.querySelector(`.card[data-i="${i}"]`); if(el){el.classList.add("open");el.scrollIntoView({behavior:"smooth",block:"center"});}},40);
+});
+
+// theme
+const themeBtn=$("#theme");
+function setTheme(t){document.documentElement.dataset.theme=t;themeBtn.textContent=t==="dark"?"☀️":"🌙";localStorage.setItem("theme",t);}
+setTheme(localStorage.getItem("theme")|| (matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"));
+themeBtn.addEventListener("click",()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
+
+buildChips(); render();
+</script>
+</body>
+</html>
