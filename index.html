@@ -57,6 +57,10 @@
     border-radius:12px;padding:15px 16px;box-shadow:var(--shadow);cursor:pointer;transition:transform .08s}
   .card:active{transform:scale(.995)}
   .card .ctitle{font-weight:650;font-size:15.5px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline}
+  .exp{margin-left:auto;color:var(--muted);font-weight:400;flex:none}
+  .exp::after{content:"＋"}
+  .card.open .exp::after{content:"−"}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:10px}
   .card .key{color:var(--ink);font-size:14px}
   .card .meta{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .tag{font-size:11.5px;color:var(--muted);background:transparent;border:1px solid var(--line);
@@ -125,6 +129,7 @@
       <button class="iconbtn" id="theme" title="Тема">🌙</button>
     </div>
     <div class="chips" id="chips"></div>
+    <div class="hint">Нажмите на карточку, чтобы раскрыть конспект. Вкладка «По занятиям» — полный конспект каждой встречи.</div>
   </div>
 </div>
 
@@ -365,7 +370,7 @@ function cardHTML(card,i){
   const les=(card.les||[]).map(n=>`<span class="tag les">Занятие ${n}</span>`).join("");
   const bonus=card.bonus?`<span class="badge-bonus">🎁 прошлый поток</span>`:"";
   return `<div class="card" style="border-left-color:${col}" data-i="${i}">
-    <div class="ctitle">${card.t}</div>
+    <div class="ctitle">${card.t}${card.d?'<span class="exp"></span>':''}</div>
     <div class="key">${card.key}</div>
     <div class="meta">${les}${bonus}</div>
     ${card.d?`<div class="body">${card.d}</div>`:""}
@@ -383,17 +388,12 @@ function renderTopics(){
     html+=`<div class="secttitle">${RUBRICS[k].icon} ${RUBRICS[k].name}<span class="count">${list.length}</span></div>`;
     html+=`<div class="grid">${list.map(x=>cardHTML(x.c,x.i)).join("")}</div>`;
   }
-  // homework + library only when no search & all rubrics
+  // library only when no search & all rubrics
   if(!query && activeRubric==="all"){
-    html+=`<div class="secttitle">✅ Домашние задания<span class="count" id="hwc"></span></div>`;
-    html+=`<div class="hwlist"><div class="progress"><i id="hwbar"></i></div>${HOMEWORK.map((h,i)=>{
-      return `<label class="hwitem" data-h="${i}"><input type="checkbox" data-h="${i}"><span><span class="t">${h.t}</span><br><span class="d">${h.d}</span></span></label>`;
-    }).join("")}</div>`;
     html+=`<div class="secttitle">📚 Библиотека<span class="count">${LIBRARY.length}</span></div>`;
     html+=`<div class="lib">${LIBRARY.map(l=>`<div class="libitem"><div class="a">${l.a}</div><div class="who">${l.who}</div><div class="note">${l.note}</div></div>`).join("")}</div>`;
   }
   main.innerHTML=html || `<div class="empty">Ничего не найдено по запросу «${query}».</div>`;
-  if(!query && activeRubric==="all") wireHomework();
 }
 function renderLessons(){
   let html="";
@@ -405,8 +405,7 @@ function renderLessons(){
       <div class="date">${L.date}</div>
       <h3>${L.title}</h3>
       <p class="lead">${L.lead}</p>
-      <div class="mini">${rel.map(x=>`<a data-i="${x.i}">${x.c.t}</a>`).join("")}</div>
-      <div class="hw">📌 Домашка: ${L.hw}</div>
+      ${rel.length?`<div class="grid">${rel.map(x=>cardHTML(x.c,x.i)).join("")}</div>`:""}
     </div>`;
   }
   main.innerHTML=html || `<div class="empty">Ничего не найдено.</div>`;
